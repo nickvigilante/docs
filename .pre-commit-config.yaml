@@ -1,0 +1,39 @@
+# Pre-commit hooks for this repo. Formats files and scans for secrets before
+# each commit; the same hooks run in CI (.github/workflows/lint.yml) via
+# `pre-commit run --all-files`, so local and CI can't drift.
+#
+# One-time local setup:
+#   brew install pre-commit betterleaks
+#   pre-commit install
+#
+# mdformat is deliberately NOT used here: this repo's .mdx files use Mintlify
+# JSX components (<AccordionGroup>, <Tip>, <CardGroup cols={2}>, etc.) mixed
+# into otherwise-CommonMark content. mdformat is CommonMark-strict and badly
+# mangles this — YAML frontmatter got turned into a broken heading, and
+# indented prose inside JSX components got wrapped in fenced code blocks,
+# which would break the live Mintlify site. Verified against quickstart.mdx
+# before deciding this; do not add mdformat back without re-checking.
+#
+# Formatter/linter per file type:
+#   JSON      -> check-json (validates docs.json; Mintlify's config is plain
+#                JSON, not YAML, despite the .json extension being easy to
+#                mistake for something yamllint should also cover)
+#   Secrets   -> betterleaks
+#   All files -> whitespace / EOF / merge-conflict hygiene
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-json
+
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.3.1
+    hooks:
+      - id: betterleaks
